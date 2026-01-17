@@ -1,20 +1,32 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
+st.set_page_config(page_title="Aura AI")
 st.title("Aura AI ✨")
 
-# Simple Setup
+# NEW 2026 CONNECTION METHOD
 if "GOOGLE_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # We create a 'Client' now, which is much more stable
+    client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("Key is missing in Secrets!")
+    st.error("Missing Key in Secrets!")
+    st.stop()
 
-# Input
-prompt = st.text_input("Say something to Aura:")
+# Simple UI
+user_query = st.text_input("Ask Aura anything:")
+
 if st.button("Send"):
-    try:
-        response = model.generate_content(prompt)
-        st.write(response.text)
-    except Exception as e:
-        st.error(f"Error: {e}")
+    if user_query:
+        with st.spinner("Aura is thinking..."):
+            try:
+                # The new way to generate content
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash", 
+                    contents=user_query
+                )
+                st.write("---")
+                st.success(response.text)
+            except Exception as e:
+                st.error(f"Aura had a glitch: {e}")
+    else:
+        st.warning("Please type something first!")
