@@ -7,8 +7,8 @@ st.set_page_config(page_title="Aura AI", page_icon="✨")
 # 2. Connect to the Brain
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    # This specific name usually works best with the 'v1' stable version
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Using the FULL path to the model to avoid the 404 error
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
 else:
     st.error("Wait! I need my API Key. Please add it to Streamlit Secrets.")
     st.stop()
@@ -32,7 +32,6 @@ else:
         if user_query:
             with st.spinner("Searching the universe..."):
                 try:
-                    # Added 'generation_config' to make it extra stable
                     response = model.generate_content(user_query)
                     st.markdown("---")
                     st.write(response.text)
