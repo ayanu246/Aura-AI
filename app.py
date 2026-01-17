@@ -3,8 +3,8 @@ import google.generativeai as genai
 
 st.set_page_config(page_title="Aura AI", page_icon="✨")
 
-# THE FIX: This forces the app to use the stable 'v1' instead of 'v1beta'
 if "GOOGLE_API_KEY" in st.secrets:
+    # This 'transport=rest' is the magic part that stops the 404 error
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"], transport='rest')
     model = genai.GenerativeModel('gemini-1.5-flash')
 else:
@@ -23,7 +23,6 @@ else:
     if st.button("Ask Aura"):
         with st.spinner("Thinking..."):
             try:
-                # We use the most direct way to get the answer
                 response = model.generate_content(query)
                 st.write("---")
                 st.write(response.text)
