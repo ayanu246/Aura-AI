@@ -8,7 +8,7 @@ st.set_page_config(page_title="Aura AI", page_icon="✨", layout="centered")
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     # Using 'gemini-1.5-flash' - it's fast and knows everything!
-    model = genai.GenerativeModel('gemini-1.5-flash')
+   model = genai.GenerativeModel('gemini-pro') 
 else:
     st.error("Wait! I need my API Key. Please add it to Streamlit Secrets.")
     st.stop()
@@ -45,3 +45,4 @@ else:
     if st.sidebar.button("Reset Chat"):
         del st.session_state.user_name
         st.rerun()
+
