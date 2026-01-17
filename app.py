@@ -1,30 +1,26 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.set_page_config(page_title="Aura AI", page_icon="✨")
+st.title("Aura AI ✨")
 
+# Connect to Google using the Secret Key
 if "GOOGLE_API_KEY" in st.secrets:
-    # This 'transport=rest' is the magic part that stops the 404 error
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"], transport='rest')
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    # This specific line helps bypass the 404 error
+    model = genai.GenerativeModel('gemini-pro') 
 else:
-    st.error("Missing API Key!")
+    st.error("I can't find your API key in the Secrets box!")
     st.stop()
 
-if 'user_name' not in st.session_state:
-    st.title("Welcome to Aura AI ✨")
-    name = st.text_input("What is your name?")
-    if st.button("Start"):
-        st.session_state.user_name = name
-        st.rerun()
-else:
-    st.title(f"Aura AI is active. ✨")
-    query = st.text_area("Ask me anything:")
-    if st.button("Ask Aura"):
-        with st.spinner("Thinking..."):
-            try:
-                response = model.generate_content(query)
-                st.write("---")
-                st.write(response.text)
-            except Exception as e:
-                st.error(f"Aura had a glitch: {e}")
+# The Chat Box
+user_query = st.text_input("Ask me anything:")
+
+if st.button("Send"):
+    if user_query:
+        try:
+            # Get the answer from the brain
+            response = model.generate_content(user_query)
+            st.info(response.text)
+        except Exception as e:
+            # This will show us the EXACT error if it fails
+            st.error(f"Error details: {e}")
