@@ -1,22 +1,19 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. PAGE CONFIG
+# 1. PAGE SETTINGS
 st.set_page_config(page_title="Aura AI", page_icon="⭐")
 
-# 2. STATE SETUP
+# 2. SESSION STATE
 if "credits" not in st.session_state: st.session_state.credits = 50
 if "all_chats" not in st.session_state: st.session_state.all_chats = {}
 if "current_chat" not in st.session_state: st.session_state.current_chat = None
 
-# 3. API CHECK
-if "OPENROUTER_API_KEY" in st.secrets:
-    client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=st.secrets["OPENROUTER_API_KEY"]
-    )
-else:
-    st.error("Missing API Key in Secrets!"); st.stop()
+# 3. API CLIENT
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=st.secrets["OPENROUTER_API_KEY"]
+)
 
 # 4. SIDEBAR
 with st.sidebar:
@@ -46,10 +43,17 @@ if st.session_state.current_chat:
         with st.chat_message("user"): st.markdown(p)
         
         with st.chat_message("assistant"):
-            try:
-                r = client.chat.completions.create(
+            # Get response from AI
+            r = client.chat.completions.create(
+                model="google/gemma-3-27b-it:free",
+                messages=msgs
+            )
+            ans = r.choices[0].message.content
+            st.markdown(ans)
+            msgs.append({"role": "assistant", "content": ans})
+            
+            # Auto-Rename Chat
+            if len(msgs) <= 2:
+                sr = client.chat.completions.create(
                     model="google/gemma-3-27b-it:free",
-                    messages=msgs
-                )
-                ans = r.choices[0].message.content
-                st.markdown
+                    messages=[{"role": "user", "content": f"Summarize to 2
