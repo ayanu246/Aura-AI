@@ -1,17 +1,23 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. THE NAME HACK - This is what the phone "reads"
+# 1. FORCE THE NAME INTO THE BROWSER TAB
 st.set_page_config(page_title="Aura AI", page_icon="⭐")
 
-# This hides the 'made with streamlit' footer which sometimes tricks the phone
+# 2. THE "KILL STREAMLIT" HACK
+# This CSS and HTML tries to overwrite the app name at the root level
 st.markdown("""
+    <script>
+        // This tries to rename the app in the phone's memory
+        window.parent.document.title = "Aura AI";
+        document.title = "Aura AI";
+    </script>
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .stApp { name: "Aura AI"; }
     </style>
-    <title>Aura AI</title>
 """, unsafe_allow_html=True)
 
 if "credits" not in st.session_state: st.session_state.credits = 50
