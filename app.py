@@ -22,7 +22,6 @@ st.markdown("""
             height: 45px !important;
         }
         
-        /* Make sure the header doesn't hide the arrow */
         [data-testid="stHeader"] {
             background-color: rgba(0,0,0,0) !important;
         }
@@ -58,7 +57,7 @@ with st.sidebar:
             st.session_state.current_chat = n
             st.rerun()
 
-# 5. MAIN CHAT Area
+# 5. MAIN CHAT AREA
 if st.session_state.current_chat:
     msgs = st.session_state.all_chats[st.session_state.current_chat]
     for m in msgs:
@@ -70,4 +69,11 @@ if st.session_state.current_chat:
         with st.chat_message("user"): st.markdown(p)
         
         with st.chat_message("assistant"):
-            r = client.chat.completions.create(model="google/gemma-3-27b-it:free", messages=msgs
+            # FIXED THE BRACKET ON THE LINE BELOW
+            r = client.chat.completions.create(model="google/gemma-3-27b-it:free", messages=msgs)
+            ans = r.choices[0].message.content
+            st.markdown(ans)
+            msgs.append({"role": "assistant", "content": ans})
+            st.rerun()
+else:
+    st.info("👈 Tap that Blue Arrow in the corner to start a New Chat!")
