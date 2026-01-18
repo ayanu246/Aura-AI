@@ -1,22 +1,20 @@
 import streamlit as st
 from openai import OpenAI
-import requests, json
+import requests, json, time
 
 # 1. BRANDING
 APP_NAME = "Aura AI"
 ICON_URL = "https://github.com/ayanu246/Aura-AI/blob/main/Logo.png?raw=true"
-
 st.set_page_config(page_title=APP_NAME, page_icon=ICON_URL)
 
+# Mobile Identity Fix
 m = {"name": APP_NAME, "short_name": APP_NAME, "display": "standalone"}
 st.markdown(f"""
 <head>
-    <link rel="apple-touch-icon" href="{ICON_URL}">
-    <link rel="icon" href="{ICON_URL}">
+    <link rel="apple-touch-icon" href="{ICON_URL}"><link rel="icon" href="{ICON_URL}">
     <meta name="apple-mobile-web-app-title" content="{APP_NAME}">
     <link rel="manifest" href='data:application/json,{json.dumps(m)}'>
-</head>
-""", unsafe_allow_html=True)
+</head>""", unsafe_allow_html=True)
 
 # 2. API
 if "OPENROUTER_API_KEY" in st.secrets:
@@ -29,15 +27,18 @@ else:
 if "all_chats" not in st.session_state: st.session_state.all_chats = {}
 if "current_chat" not in st.session_state: st.session_state.current_chat = None
 
+# 4. FIXED CREDIT METER (Forced Update)
 def get_credits():
     try:
         h = {"Authorization": f"Bearer {api_key}"}
-        r = requests.get("https://openrouter.ai/api/v1/key", headers=h, timeout=5)
+        # The 't' parameter at the end forces a fresh count from the server
+        url = f"https://openrouter.ai/api/v1/key?t={time.time()}"
+        r = requests.get(url, headers=h, timeout=5)
         usage = r.json().get("data", {}).get("usage_daily", 0)
         return max(0, 50 - int(usage))
     except: return "50"
 
-# 4. SIDEBAR
+# 5. SIDEBAR
 with st.sidebar:
     st.image(ICON_URL, width=100)
     st.title("Aura History")
@@ -57,9 +58,10 @@ with st.sidebar:
             st.session_state.all_chats[st.session_state.current_chat] = []
             st.rerun()
     st.write("---")
+    # Fresh credits display
     st.metric(label="Free Chats Left", value=f"{get_credits()}/50")
 
-# 5. CHAT
+# 6. CHAT
 if st.session_state.current_chat:
     st.subheader(f"Chat: {st.session_state.current_chat}")
     msgs = st.session_state.all_chats[st.session_state.current_chat]
