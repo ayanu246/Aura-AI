@@ -1,31 +1,30 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. FORCE THE NAME INTO THE BROWSER TAB
+# 1. THE NAME OVERRIDE
 st.set_page_config(page_title="Aura AI", page_icon="⭐")
 
-# 2. THE "KILL STREAMLIT" HACK
-# This CSS and HTML tries to overwrite the app name at the root level
+# 2. THE CACHE BUSTER (This tricks the phone into seeing a 'new' site)
 st.markdown("""
     <script>
-        // This tries to rename the app in the phone's memory
+        // Force the browser tab to say Aura AI
         window.parent.document.title = "Aura AI";
-        document.title = "Aura AI";
     </script>
     <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        .stApp { name: "Aura AI"; }
+        /* Hide all Streamlit parts */
+        #MainMenu, footer, header {visibility: hidden;}
+        .stAppDeployButton {display:none;}
     </style>
 """, unsafe_allow_html=True)
 
+# 3. SETUP
 if "credits" not in st.session_state: st.session_state.credits = 50
 if "all_chats" not in st.session_state: st.session_state.all_chats = {}
 if "current_chat" not in st.session_state: st.session_state.current_chat = None
 
 client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=st.secrets["OPENROUTER_API_KEY"])
 
+# 4. SIDEBAR
 with st.sidebar:
     st.title("Aura AI")
     if st.button("➕ New Chat", use_container_width=True):
@@ -37,8 +36,10 @@ with st.sidebar:
         if st.button(n, key=f"b_{n}", use_container_width=True):
             st.session_state.current_chat = n
             st.rerun()
+    st.divider()
     st.metric("Free Chats Left", f"{st.session_state.credits}/50")
 
+# 5. CHAT
 if st.session_state.current_chat:
     msgs = st.session_state.all_chats[st.session_state.current_chat]
     for m in msgs:
@@ -53,4 +54,4 @@ if st.session_state.current_chat:
             st.markdown(ans); msgs.append({"role": "assistant", "content": ans})
             st.rerun()
 else:
-    st.info("👋 Welcome to Aura AI!")
+    st.info("👋 Tap 'New Chat' to start!")
