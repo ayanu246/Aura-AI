@@ -1,65 +1,52 @@
 import streamlit as st
-from google import genai
-import qrcode
-from io import BytesIO
+from openai import OpenAI
 
-# 1. PAGE SETUP (Aura's Face)
-st.set_page_config(page_title="Aura AI", page_icon="✨", layout="centered")
+# 1. Page Styling
+st.set_page_config(page_title="Aura AI", page_icon="✨")
 st.title("Aura AI ✨")
 
-# 2. CONNECTION (The API Key)
-if "GOOGLE_API_KEY" in st.secrets:
-    # Uses the brand new 2026 Client you found!
-    client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+# 2. Connect to the Free Brain via OpenRouter
+if "OPENROUTER_API_KEY" in st.secrets:
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=st.secrets["OPENROUTER_API_KEY"],
+    )
 else:
-    st.error("Please add GOOGLE_API_KEY to Streamlit Secrets.")
+    st.error("Add your OPENROUTER_API_KEY to Streamlit Secrets!")
     st.stop()
 
-# 3. MEMORY (Remembering the chat)
+# 3. Aura's Memory
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous messages
+# Display the chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 4. CHAT LOGIC (Aura's Brain)
+# 4. Chatting Logic
 if prompt := st.chat_input("Ask Aura..."):
-    # Add user message to history
+    # Save user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # Get Aura's answer
     with st.chat_message("assistant"):
         try:
-            # We use 'gemini-1.5-flash' because it has a real free limit in 2026
-            response = client.models.generate_content(
-                model="gemini-1.5-flash", 
-                contents=prompt
+            # We use Gemma 3 27B Free - It's smart and $0 cost
+            response = client.chat.completions.create(
+                model="google/gemma-3-27b-it:free",
+                messages=[{"role": "user", "content": prompt}]
             )
-            
-            # Show the answer
-            answer = response.text
+            answer = response.choices[0].message.content
             st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
-            
         except Exception as e:
-            # If Google blocks you, this tells us exactly why
-            st.error(f"Aura is currently over capacity. Please wait 60 seconds. Error: {e}")
+            st.error(f"Aura is resting. Error: {e}")
 
-# 5. SHARE SECTION (Jotform style QR Code)
+# 5. Share Aura (Sidebar)
 with st.sidebar:
-    st.header("Install Aura")
-    st.write("Scan to put Aura on your phone home screen!")
-    
-    # Your specific app link
-    url = "https://aura-ai-official246810.streamlit.app"
-    
-    # Make the QR code
-    qr = qrcode.make(url)
-    buf = BytesIO()
-    qr.save(buf)
-    
-    st.image(buf)
-    st.caption("Open your camera to scan")
+    st.write("### Install Aura")
+    st.image(f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://aura-ai-official246810.streamlit.app")
+    st.caption("Scan to add to your home screen")
