@@ -3,15 +3,15 @@ from openai import OpenAI
 import requests
 import json
 
-# --- 1. BRANDING & MOBILE IDENTITY ---
+# --- 1. BRANDING ---
 APP_NAME = "Aura AI"
 ICON_URL = "https://github.com/ayanu246/Aura-AI/blob/main/Logo.png?raw=true"
 
 st.set_page_config(page_title=APP_NAME, page_icon=ICON_URL)
 
-# This Manifest forces the phone to name the app "Aura AI"
-manifest = {"name": APP_NAME, "short_name": APP_NAME, "display": "standalone"}
-m_str = json.dumps(manifest)
+# This manifest helps the phone name the app correctly
+m = {"name": APP_NAME, "short_name": APP_NAME, "display": "standalone"}
+m_str = json.dumps(m)
 
 st.markdown(f"""
 <head>
@@ -22,15 +22,18 @@ st.markdown(f"""
 </head>
 """, unsafe_allow_html=True)
 
-# --- 2. API CONNECTION ---
+# --- 2. CONNECTION ---
 if "OPENROUTER_API_KEY" in st.secrets:
     api_key = st.secrets["OPENROUTER_API_KEY"]
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key
+    )
 else:
     st.error("Add Key to Secrets!")
     st.stop()
 
-# --- 3. STORAGE & CREDITS ---
+# --- 3. STORAGE ---
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = {}
 if "current_chat" not in st.session_state:
@@ -39,7 +42,8 @@ if "current_chat" not in st.session_state:
 def get_credits():
     try:
         h = {"Authorization": f"Bearer {api_key}"}
-        r = requests.get("https://openrouter.ai/api/v1/key", headers=h, timeout=5)
+        url = "https://openrouter.ai/api/v1/key"
+        r = requests.get(url, headers=h, timeout=5)
         usage = r.json().get("data", {}).get("usage_daily", 0)
         return max(0, 50 - int(usage))
     except:
@@ -69,11 +73,10 @@ with st.sidebar:
             st.rerun()
 
     st.write("---")
-    # This fetches fresh credits every time the sidebar loads
     rem = get_credits()
-    st.metric(label="Free Chats Left Today", value=f"{rem}/50")
+    st.metric(label="Free Chats Left", value=f"{rem}/50")
 
-# --- 5. CHAT AREA ---
+# --- 5. CHAT ---
 if st.session_state.current_chat:
     st.subheader(f"Chat: {st.session_state.current_chat}")
     msgs = st.session_state.all_chats[st.session_state.current_chat]
@@ -89,7 +92,7 @@ if st.session_state.current_chat:
 
         with st.chat_message("assistant"):
             try:
-                # Main response
+                # Get Answer
                 r = client.chat.completions.create(
                     model="google/gemma-3-27b-it:free",
                     messages=msgs
@@ -98,8 +101,11 @@ if st.session_state.current_chat:
                 st.markdown(ans)
                 msgs.append({"role": "assistant", "content": ans})
 
-                # Rename logic
+                # Rename logic (shortened lines to prevent error)
                 if len(msgs) <= 2:
+                    sum_p = f"Summarize to 2 words: {p}"
                     sr = client.chat.completions.create(
                         model="google/gemma-3-27b-it:free",
-                        messages=[{"role": "user
+                        messages=[{"role": "user", "content": sum_p}]
+                    )
+                    nn = sr.choices
