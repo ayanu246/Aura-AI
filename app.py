@@ -1,19 +1,18 @@
 import streamlit as st
 from google import genai
-import qrcode
-from io import BytesIO
 
-# 1. Setup
+# 1. Page Config
 st.set_page_config(page_title="Aura AI", page_icon="✨")
 st.title("Aura AI ✨")
 
+# 2. Setup the NEW 2026 Client
 if "GOOGLE_API_KEY" in st.secrets:
     client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("Missing Key!")
+    st.error("Missing API Key!")
     st.stop()
 
-# 2. Chat Logic
+# 3. Chat Logic
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -21,6 +20,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# 4. THE 2026 MODEL FIX
 if prompt := st.chat_input("Ask Aura..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -28,25 +28,19 @@ if prompt := st.chat_input("Ask Aura..."):
 
     with st.chat_message("assistant"):
         try:
-            response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+            # We switch to the 'gemini-3-flash-preview' model 
+            # This is the 3.0 model that usually has a FRESH quota.
+            response = client.models.generate_content(
+                model="gemini-3-flash-preview", 
+                contents=prompt
+            )
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error(f"Error: {e}")
-
-# 3. JOTFORM-STYLE DOWNLOAD SECTION
-with st.sidebar:
-    st.header("Download Aura")
-    st.write("Scan this code to install Aura on your phone for free!")
-    
-    # This creates the link to your specific app
-    app_link = "https://aura-ai-official246810.streamlit.app"
-    
-    # This generates the image
-    qr_img = qrcode.make(app_link)
-    buf = BytesIO()
-    qr_img.save(buf)
-    
-    # This shows it on the screen
-    st.image(buf)
-    st.caption("Scan with your phone camera")
+            # If 3.0 is busy, we try the most stable backup
+            try:
+                response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except:
+                st.error("Aura's 2026 brain is currently locked. Please check if you have 'Gemini 3' enabled in AI Studio.")
