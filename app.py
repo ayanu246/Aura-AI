@@ -57,7 +57,46 @@ with st.sidebar:
         st.session_state.all_chats[st.session_state.current_chat] = []
         st.rerun()
 
-    # Credit Tracker at bottom
+    # Credit Tracker (Fixed One-Liner)
     st.write("---")
-    remaining = get_remaining_credits()
-    st.metric(label="Free Chats Left", value=
+    remaining_count = get_remaining_credits()
+    st.metric(label="Free Chats Left", value=f"{remaining_count}/50")
+
+# 5. CHAT AREA
+if st.session_state.current_chat:
+    messages = st.session_state.all_chats[st.session_state.current_chat]
+
+    for msg in messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    if prompt := st.chat_input("Ask Aura..."):
+        messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            try:
+                # Chatting with Gemma 3
+                response = client.chat.completions.create(
+                    model="google/gemma-3-27b-it:free",
+                    messages=messages
+                )
+                answer = response.choices[0].message.content
+                st.markdown(answer)
+                messages.append({"role": "assistant", "content": answer})
+
+                # Rename logic (Triggers only on first message)
+                if len(messages) <= 2:
+                    name_res = client.chat.completions.create(
+                        model="google/gemma-3-27b-it:free",
+                        messages=[{"role": "user", "content": f"Summarize to 2 words: {prompt}"}]
+                    )
+                    new_name = name_res.choices[0].message.content.strip().replace('"', '')
+                    st.session_state.all_chats[new_name] = st.session_state.all_chats.pop(st.session_state.current_chat)
+                    st.session_state.current_chat = new_name
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Aura Error: {e}")
+else:
+    st.info("Start by clicking 'New Chat' in the sidebar!")
