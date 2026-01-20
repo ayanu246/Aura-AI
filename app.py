@@ -5,7 +5,7 @@ import urllib.parse
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Aura AI", page_icon="⭐", initial_sidebar_state="expanded")
 
-# 2. BLUE ARROW CSS (Kept exactly as you liked it)
+# 2. BLUE ARROW CSS
 st.markdown("""
     <style>
         [data-testid="stSidebarCollapseIcon"] { color: #007BFF !important; background-color: #f0f2f6 !important; border-radius: 10px !important; padding: 5px !important; border: 2px solid #007BFF !important; width: 45px !important; height: 45px !important; }
@@ -40,7 +40,7 @@ with st.sidebar:
 if st.session_state.current_chat:
     msgs = st.session_state.all_chats[st.session_state.current_chat]
     
-    # This loop shows the history (including images)
+    # Display message history
     for m in msgs:
         with st.chat_message(m["role"]):
             if m.get("is_image"):
@@ -48,21 +48,9 @@ if st.session_state.current_chat:
             else:
                 st.markdown(m["content"])
     
-    if p := st.chat_input("Ask me to draw something..."):
+    if p := st.chat_input("Ask or Draw..."):
         st.session_state.credits = max(0, st.session_state.credits - 1)
         
-        # KEYWORDS for Image Detection
-        img_words = ["draw", "image", "photo", "picture", "make me a", "generate"]
-        is_img = any(word in p.lower() for word in img_words)
-
-        if is_img:
-            # Clean the prompt for the AI
-            clean_p = p.lower()
-            for w in img_words: clean_p = clean_p.replace(w, "")
-            clean_p = clean_p.replace("of", "").replace("can you", "").strip()
-            
-            # URL for the REAL image
-            img_url = f"https://pollinations.ai/p/{urllib.parse.quote(clean_p)}?width=1024&height=1024&model=flux"
-            
-            # Show on screen
-            with st.chat_message("user"):
+        # Detect if user wants an image
+        img_keywords = ["draw", "image", "photo", "picture", "make me a", "generate"]
+        is_img_req
