@@ -87,3 +87,4 @@ if st.session_state.current_chat:
             st.rerun()
 else:
     st.info("👈 Tap the Blue Arrow to start a New Chat!")
+
